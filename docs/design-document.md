@@ -1,9 +1,7 @@
 ~~~
 backend/
         checker.py
-        data/
-            requests.db
-        tests/
+        requests.db
 
 interface/
         mail_push.py
