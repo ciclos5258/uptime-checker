@@ -1,7 +1,19 @@
-from checker import health_check, api_check, sqlite3
+import logging
+
+from pathlib import Path
+from checker import health_check, api_check, check_should_alert, sqlite3
+from AlertManager.TelegramNotifier import send_message
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    filename='app.log'
+)
 
 def db_init():
-    connection = sqlite3.connect('requests.db')
+    # Используем абсолютный путь к БД в папке backend
+    db_path = Path(__file__).resolve().parent / "requests.db"
+    connection = sqlite3.connect(db_path)
     cursor = connection.cursor()
 
     cursor.execute('''
@@ -13,6 +25,15 @@ def db_init():
     api_answer TEXT
     )
     ''')
+
+    ('''CREATE TABLE IF NOT EXISTS users(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    chat_id INTEGER PRIMARY KEY,
+    username TEXT,
+    first_name TEXT,
+    subscribed INTEGER DEFAULT 1
+    )
+    ''');
     
     return connection, cursor
 
@@ -22,6 +43,12 @@ health_check(cursor)
 api_check(cursor)
 
 connection.commit()
+
+if check_should_alert() == "DOWN":
+    try:
+        send_message()
+    except:
+        logging.error(f"Sending message error")
 
 cursor.close()
 connection.close()

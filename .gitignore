@@ -1,3 +1,5 @@
 backend/__pycache__
 backend/requests.db
 backend/requests.db
+backend/app.log
+.env
